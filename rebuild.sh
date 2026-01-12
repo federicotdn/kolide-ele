@@ -144,8 +144,8 @@ function build_fpm() {
 
 function build_launcher_package() {
 	local extra_flags=" -container_tool=${CONTAINER_TOOL}"
-	case "${DISTRO}" in
-	silverblue | bazzite | bluefin)
+	case "${DISTRO}${VARIANT}" in
+	*silverblue* | *kinoite* | bazzite* | bluefin*)
 		extra_flags="${extra_flags} -bin_root_dir=/opt"
 		;;
 	esac
@@ -190,8 +190,8 @@ function build_launcher_package() {
 	echo ">> SUCCESS! ${dest}"
 	echo ""
 
-	case "${DISTRO}" in
-	silverblue | bazzite | bluefin)
+	case "${DISTRO}${VARIANT}" in
+	*silverblue* | *kinoite* | bazzite* | bluefin*)
 		echo "To install, run:"
 		echo ""
 		echo "rpm-ostree install ${dest}"
@@ -202,17 +202,17 @@ function build_launcher_package() {
 		echo ""
 		echo "sudo rpm-ostree uninstall launcher-kolide-k2"
 		;;
-	fedora | rocky | "red hat")
+	fedora* | rocky* | *red\ hat*)
 		echo "To install, run:"
 		echo ""
 		echo "sudo rpm -ivh ${dest}"
 		;;
-	debian | ubuntu | vanillaos)
+	debian* | ubuntu* | vanillaos*)
 		echo "To install, run:"
 		echo ""
 		echo "sudo dpkg -i ${dest}"
 		;;
-	chainguard)
+	chainguard*)
 		echo "To install, run:"
 		echo ""
 		echo " sudo apk add --allow-untrusted ${dest}"
@@ -231,6 +231,7 @@ readonly SRC_DIR="$(dirname $(realpath $0))"
 readonly REFERENCE_PKG="$(realpath "$1")"
 readonly WORK_DIR=/tmp/rebuild_$(basename ${REFERENCE_PKG})
 readonly DISTRO=$(awk '/^ID=/' /etc/*-release | awk -F'=' '{ print tolower($2) }' | sed s/\"//g)
+readonly VARIANT=$(awk '/^VARIANT_ID=/' /etc/*-release | awk -F'=' '{ print tolower($2) }' | sed s/\"//g)
 readonly ARCH=$(uname -m)
 if type -P podman >/dev/null; then
 	readonly CONTAINER_TOOL="podman"
@@ -251,6 +252,7 @@ fi
 echo "#######################################################"
 echo "## Kolide ELE (Exotic Linux Environment), building for:"
 echo "##   DISTRO:         ${DISTRO}"
+echo "##   VARIANT:        ${VARIANT:-none}"
 echo "##   ARCH:           ${ARCH}"
 echo "##   FORMAT:         ${PKG_FORMAT}"
 echo "##   CONTAINER TOOL: ${CONTAINER_TOOL}"
