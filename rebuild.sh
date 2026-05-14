@@ -230,8 +230,13 @@ fi
 readonly SRC_DIR="$(dirname $(realpath $0))"
 readonly REFERENCE_PKG="$(realpath "$1")"
 readonly WORK_DIR=/tmp/rebuild_$(basename ${REFERENCE_PKG})
-readonly DISTRO=$(awk '/^ID=/' /etc/*-release | awk -F'=' '{ print tolower($2) }' | sed s/\"//g)
-readonly VARIANT=$(awk '/^VARIANT_ID=/' /etc/*-release | awk -F'=' '{ print tolower($2) }' | sed s/\"//g)
+if [[ -f /run/.containerenv ]] && type -P flatpak-spawn >/dev/null; then
+	readonly OS_RELEASE=$(flatpak-spawn --host cat /etc/os-release)
+else
+	readonly OS_RELEASE=$(cat /etc/os-release)
+fi
+readonly DISTRO=$(echo "${OS_RELEASE}" | awk -F'=' '/^ID=/{ print tolower($2) }' | sed s/\"//g)
+readonly VARIANT=$(echo "${OS_RELEASE}" | awk -F'=' '/^VARIANT_ID=/{ print tolower($2) }' | sed s/\"//g)
 readonly ARCH=$(uname -m)
 if type -P podman >/dev/null; then
 	readonly CONTAINER_TOOL="podman"
